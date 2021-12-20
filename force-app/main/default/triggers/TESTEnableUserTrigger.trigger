@@ -1,0 +1,23 @@
+trigger TESTEnableUserTrigger on User (after insert) {
+    
+    List<PermissionSet> lstPermSets = [SELECT Id, Name 
+                                         FROM PermissionSet 
+                                        WHERE Name IN ('Traction_Rec_Community_User','AG_External_User_Basic_Access')];
+    
+    List<PermissionSetAssignment> lstPSAs = new List<PermissionSetAssignment>();
+    
+    for (User u : Trigger.new) {
+        if (u.IsPortalEnabled) {
+            for (PermissionSet ps : lstPermSets) {
+                PermissionSetAssignment psa = new PermissionSetAssignment();
+                psa.AssigneeId = u.Id;
+                psa.PermissionSetId = ps.Id;
+                System.debug('added psa to list');
+                lstPSAs.add(psa);
+            }
+        }
+    }
+    System.debug('Inserted ' + lstPSAs.size() + ' records');
+    insert lstPSAs;
+
+}
