@@ -19,8 +19,6 @@ public with sharing class ExternalUserService {
                 }
             }
         }
-        // Insert permission set assignments
-          // Check for duplicates in future call with failed records
         insert lstPSAs;
     }
 
