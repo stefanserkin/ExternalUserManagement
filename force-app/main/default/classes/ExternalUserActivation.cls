@@ -1,27 +1,40 @@
 public with sharing class ExternalUserActivation {
 
     @InvocableMethod(label='Activate External User' description='Returns a username for created user' category='Custom User Actions')
-    public static List<ActivateUserResult> activateUser(List<ActivateUserRequest> request) {
-        Id contactId     = request.get(0).contactId;
-        String username  = request.get(0).username;
-        String email     = request.get(0).email;
-        String firstName = request.get(0).firstName;
-        String lastName  = request.get(0).lastName;
+    public static List<ActivateUserResult> activateUser(List<ActivateUserRequest> requestList) {
 
-        // CALL EXTERNAL USER SERVICE TO GET USER DEFAULTS
-        User u = ExternalUserService.getUserWithDefaults();
-        // SET CONTACT SPECIFIC VALUES
-        u.ContactId = contactId;
-        u.Username  = username;
-        u.Email     = email;
-        u.FirstName = firstName;
-        u.LastName  = lastName;
-        u.Alias     = ExternalUserService.getAliasFromName(firstName, lastName);
-        // INSERT USER - CAPTURE SUCCESS
-        Database.SaveResult sr = Database.insert(u);
+        List<User> userList = new List<User>();
+        for (ActivateUserRequest req : requestList) {
+            // Call external service to get user defaults
+            User u = req.siteName == null ? ExternalUserService.getUserWithDefaults(req.siteName) : ExternalUserService.getUserWithDefaults();
+            // Set unique values from arguments
+            u.ContactId           = req.contactId;
+            u.Username            = req.username;
+            u.Email               = req.email;
+            u.FirstName           = req.firstName;
+            u.LastName            = req.lastName;
+            u.Alias               = ExternalUserService.getAliasFromName(req.firstName, req.lastName);
+            u.Authorized_Sites__c = req.siteName == null ? '' : req.siteName;
+            userList.add(u);
+        }
+
+        List<Id> newUserIds = new List<Id>();
+        List<String> errorList = new List<String>();
+
+        List<Database.SaveResult> srList = Database.insert(userList, true);
+        for (Database.SaveResult sr : srList) {
+            if (sr.isSuccess()) {
+                newUserIds.add(sr.getId());
+            } else {
+                for (Database.error error : sr.getErrors()) {
+                    errorList.add(error.getMessage());
+                }
+            }
+        }
 
         ActivateUserResult result = new ActivateUserResult();
-        result.isSuccess = sr.isSuccess();
+        result.errors = errorList;
+        result.newUserIds = newUserIds;
         List<ActivateUserResult> resultList = new List<ActivateUserResult>();
         resultList.add(result);
         return resultList;
@@ -38,11 +51,15 @@ public with sharing class ExternalUserActivation {
         public String firstName;
         @InvocableVariable(label='Last Name' required=true)
         public String lastName;
+        @InvocableVariable(label='Site Name')
+        public String siteName;
     }
 
     public class ActivateUserResult {
-        @InvocableVariable(label='Activation Successful')
-        public Boolean isSuccess;
+        @InvocableVariable(label='New Users')
+        public List<Id> newUserIds;
+        @InvocableVariable(label='Errors')
+        public List<String> errors;
     }
 
 }

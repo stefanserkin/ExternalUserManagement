@@ -6,7 +6,7 @@ public with sharing class UserTriggerHandler {
         Boolean isAfter
     ) {
         if (isInsert && isAfter) {
-            ExternalUserService.handleNewUsers(mapUsersInTrigger);
+            ExternalUserService.handleAfterInsert(mapUsersInTrigger);
         }
     }
 

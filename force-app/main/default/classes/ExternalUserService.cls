@@ -1,32 +1,84 @@
 public with sharing class ExternalUserService {
+    
+    private static Map<String, External_User_Configuration__mdt> mapUserConfigsBySite;
+    private static Boolean userConfigMapIsSet = false;
 
-    private static External_User_Configuration__mdt userConfig = External_User_Configuration__mdt.getAll().values().get(0);
+    private static Map<String, Id> mapProfileIdsBySiteName;
+    private static Boolean profileIdMapIsSet = false;
 
-    private static Boolean profileIdIsSet = false;
-    private static String profileId;
-    private static Boolean permSetIdsAreSet = false;
-    private static Set<String> setPermSetIds;
+    private static Map<String, Set<String>> mapPermSetIdsBySiteName;
+    private static Boolean permSetIdMapIsSet = false;
 
-    public static void handleNewUsers(Map<Id, User> mapUsers) {
+
+    public static void handleAfterInsert(Map<Id, User> mapUsers) {
         List<PermissionSetAssignment> lstPSAs = new List<PermissionSetAssignment>();
         Map<Id, User> mapExternalUsers = getExternalUsersFromUserMap(mapUsers);
-        Set<String> setIdsToAssign = getAutoAssignedPermissionSetIds();
-        // Create permission set assignments
-        if (!mapExternalUsers.isEmpty() && !setIdsToAssign.isEmpty()) {
-            lstPSAs = getPSAsForUsers(mapExternalUsers, setIdsToAssign);
+        if (!mapExternalUsers.isEmpty()) {
+            createPSAsForUsers(mapExternalUsers);
+        }
+    }
+
+    private static void createPSAsForUsers(Map<Id, User> mapExternalUsers) {
+        if (!permSetIdMapIsSet) {
+            setPermissionSetIdMap();
+        }
+
+        List<PermissionSetAssignment> lstPSAs = new List<PermissionSetAssignment>();
+        for (User u : mapExternalUsers.values()) {
+            Set<String> authSites = new Set<String>();
+            if (!String.isBlank(u.Authorized_Sites__c)) {
+                authSites.addAll(u.Authorized_Sites__c.split(','));
+            }
+            Set<String> permSetsToAssign = new Set<String>();
+            for (String authSite : authSites) {
+                permSetsToAssign.addAll(mapPermSetIdsBySiteName.get(authSite));
+            }
+            for (String permSetId : permSetsToAssign) {
+                PermissionSetAssignment psa = new PermissionSetAssignment();
+                psa.AssigneeId = u.Id;
+                psa.PermissionSetId = permSetId;
+                lstPSAs.add(psa);
+            }
         }
         insert lstPSAs;
     }
 
+    private static void setPermissionSetIdMap() {
+        if (permSetIdMapIsSet) {
+            return;
+        } else {
+            mapPermSetIdsBySiteName = new Map<String, Set<String>>();
+        }
+        if (!userConfigMapIsSet) {
+            setUserConfigMap();
+        }
+        Set<String> permSetIds = new Set<String>();
+        for (External_User_Configuration__mdt userConfig : mapUserConfigsBySite.values()) {
+            permSetIds.addAll(
+                userConfig.Permission_Sets_to_Auto_Assign__c.replaceAll('\\s+','').split(',')
+            );
+        }
+        List<PermissionSet> lstPermSets = [SELECT Id, Name FROM PermissionSet WHERE Name IN :permSetIds LIMIT 10000];
+        for (External_User_Configuration__mdt userConfig : mapUserConfigsBySite.values()) {
+            Set<String> configPermSetIds = new Set<String>();
+            for (PermissionSet permSet : lstPermSets) {
+                if (userConfig.Permission_Sets_to_Auto_Assign__c.contains(permSet.Name)) {
+                    configPermSetIds.add(permSet.Id);
+                }
+            }
+            mapPermSetIdsBySiteName.put(userConfig.Site_Name__c, configPermSetIds);
+        }
+        permSetIdMapIsSet = true;
+    }
+
+
     public static User getUserWithDefaults() {
-        User u = new User();
-        u.ProfileId         = getProfileId();
-        u.IsActive          = true;
-        u.TimeZoneSidKey    = 'America/New_York';
-        U.LocaleSidKey      = 'en_US';
-        u.LanguageLocaleKey = 'en_US';
-        u.EmailEncodingKey  = 'ISO-8859-1';
-        return u;
+        String siteName = getDefaultUserConfig().Site_Name__c;
+        return generateUser(siteName);
+    }
+
+    public static User getUserWithDefaults(String siteName) {
+        return generateUser(siteName);
     }
 
     public static void resetPassword(User user, Boolean sendEmail) {
@@ -40,73 +92,100 @@ public with sharing class ExternalUserService {
     private static Map<Id, User> getExternalUsersFromUserMap(Map<Id, User> mapUsers) {
         Map<Id, User> mapExternalUsers = new Map<Id, User>();
         for (User u : mapUsers.values()) {
-            if (u.IsPortalEnabled) {
+            if (u.IsPortalEnabled && !String.isBlank(u.Authorized_Sites__c)) {
                 mapExternalUsers.put(u.Id, u);
             }
         }
         return mapExternalUsers;
     }
 
-    private static List<PermissionSetAssignment> getPSAsForUsers(
-        Map<Id, User> mapUsers, Set<String> setIdsToAssign
-    ) {
-        List<PermissionSetAssignment> lstPSAs = new List<PermissionSetAssignment>();
-        for (Id key : mapUsers.keySet()) {
-            for (String strId : setIdsToAssign) {
-                PermissionSetAssignment psa = new PermissionSetAssignment();
-                psa.AssigneeId = key;
-                psa.PermissionSetId = strId;
-                lstPSAs.add(psa);
-            }
+    private static External_User_Configuration__mdt getUserConfig(String siteName) {
+        if (!userConfigMapIsSet) {
+            setUserConfigMap();
         }
-        return lstPSAs;
+        return mapUserConfigsBySite.get(siteName);
     }
 
-    private static String getProfileId() {
-        if (profileIdIsSet) {
-            return profileId;
+    private static External_User_Configuration__mdt getDefaultUserConfig() {
+        if (!userConfigMapIsSet) {
+            setUserConfigMap();
         }
-        Profile profile = [SELECT Id FROM Profile WHERE Name = :userConfig.Profile_Name__c LIMIT 1];
-        profileId = profile.Id;
-        profileIdIsSet = true;
+        External_User_Configuration__mdt defaultConfig = new External_User_Configuration__mdt();
+        for (External_User_Configuration__mdt userConfig : mapUserConfigsBySite.values()) {
+            if (userConfig.Default__c) {
+                defaultConfig = userConfig;
+                break;
+            }
+        }
+        return defaultConfig;
+    }
+
+    private static void setUserConfigMap() {
+        if (userConfigMapIsSet) {
+            return;
+        }
+        mapUserConfigsBySite = new Map<String, External_User_Configuration__mdt>();
+        List<External_User_Configuration__mdt> lstUserConfigs = External_User_Configuration__mdt.getAll().values();
+        for (External_User_Configuration__mdt userConfig : lstUserConfigs) {
+            mapUserConfigsBySite.put(userConfig.Site_Name__c, userConfig);
+        }
+        userConfigMapIsSet = true;
+    }
+
+    public static Id getProfileIdBySiteName(String siteName) {
+        if (!profileIdMapIsSet) {
+            setProfileIdMap();
+        }
+        return mapProfileIdsBySiteName.get(siteName);
+    }
+
+    public static Id getDefaultProfileId() {
+        if (!profileIdMapIsSet) {
+            setProfileIdMap();
+        }
+        Id profileId;
+        for (External_User_Configuration__mdt userConfig : mapUserConfigsBySite.values()) {
+            if (userConfig.Default__c) {
+                profileId = mapProfileIdsBySiteName.get(userConfig.Site_Name__c);
+                break;
+            }
+        }
         return profileId;
     }
 
-    private static Set<String> getAutoAssignedPermissionSetIds() {
-        // Return cached results
-        if (permSetIdsAreSet) {
-            return setPermSetIds;
+    private static void setProfileIdMap() {
+        if (profileIdMapIsSet) {
+            return;
         } else {
-            setPermSetIds = new Set<String>();
+            mapProfileIdsBySiteName = new Map<String, Id>();
         }
-        // Return empty list if assignments are blank
-        if (String.isBlank(userConfig.Permission_Sets_to_Auto_Assign__c)) {
-            setPermSetIds = new Set<String>();
-            permSetIdsAreSet = true;
-            return setPermSetIds;
+        if (!userConfigMapIsSet) {
+            setUserConfigMap();
         }
-        // Query for permission sets based on ps names in mdt record
-        String permSetNameString = userConfig.Permission_Sets_to_Auto_Assign__c;
-        List<String> lstPermSetNames = permSetNameString.replaceAll('\\s+', '').split(',');
-        String query = 'SELECT Id FROM PermissionSet WHERE Name IN (';
-        Boolean isFirstItem = true;
-        for (String name : lstPermSetNames) {
-            if (!isFirstItem) {
-                query += ',';
-            } else {
-                isFirstItem = false;
-            }
-            query += '\'' + name + '\'';
+        Set<String> profileNames = new Set<String>();
+        for (External_User_Configuration__mdt userConfig : mapUserConfigsBySite.values()) {
+            profileNames.add(userConfig.Profile_Name__c);
         }
-        query += ')';
-
-        List<PermissionSet> lstQueryResults = Database.query(query);
-
-        for (PermissionSet ps : lstQueryResults) {
-            setPermSetIds.add(ps.Id);
+        List<Profile> lstProfiles = [SELECT Id, Name FROM Profile WHERE Name IN :profileNames LIMIT 10000];
+        for (External_User_Configuration__mdt userConfig : mapUserConfigsBySite.values()) {
+            for (Profile prof : lstProfiles) {
+                if (prof.Name == userConfig.Profile_Name__c) {
+                    mapProfileIdsBySiteName.put(userConfig.Site_Name__c, prof.Id);
+                }
+            }    
         }
-        permSetIdsAreSet = true;
-        return setPermSetIds;
+        profileIdMapIsSet = true;
     }
-    
+
+    private static User generateUser(String siteName) {
+        User u = new User();
+        u.ProfileId         = getProfileIdBySiteName(siteName);
+        u.IsActive          = true;
+        u.TimeZoneSidKey    = 'America/New_York';
+        U.LocaleSidKey      = 'en_US';
+        u.LanguageLocaleKey = 'en_US';
+        u.EmailEncodingKey  = 'ISO-8859-1';
+        return u;
+    }
+
 }
