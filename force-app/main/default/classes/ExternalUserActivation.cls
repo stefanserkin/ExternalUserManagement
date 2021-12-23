@@ -16,7 +16,7 @@ public with sharing class ExternalUserActivation {
         u.Email     = email;
         u.FirstName = firstName;
         u.LastName  = lastName;
-        u.Alias     = 'g1028s';
+        u.Alias     = ExternalUserService.getAliasFromName(firstName, lastName);
         // INSERT USER - CAPTURE SUCCESS
         Database.SaveResult sr = Database.insert(u);
 

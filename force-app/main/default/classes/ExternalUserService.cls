@@ -1,6 +1,7 @@
 public with sharing class ExternalUserService {
 
     private static External_User_Configuration__mdt userConfig = External_User_Configuration__mdt.getAll().values().get(0);
+
     private static Boolean profileIdIsSet = false;
     private static String profileId;
     private static Boolean permSetIdsAreSet = false;
@@ -12,14 +13,7 @@ public with sharing class ExternalUserService {
         Set<String> setIdsToAssign = getAutoAssignedPermissionSetIds();
         // Create permission set assignments
         if (!mapExternalUsers.isEmpty() && !setIdsToAssign.isEmpty()) {
-            for (Id key : mapExternalUsers.keySet()) {
-                for (String strId : setIdsToAssign) {
-                    PermissionSetAssignment psa = new PermissionSetAssignment();
-                    psa.AssigneeId = key;
-                    psa.PermissionSetId = strId;
-                    lstPSAs.add(psa);
-                }
-            }
+            lstPSAs = getPSAsForUsers(mapExternalUsers, setIdsToAssign);
         }
         insert lstPSAs;
     }
@@ -28,7 +22,6 @@ public with sharing class ExternalUserService {
         User u = new User();
         u.ProfileId         = getProfileId();
         u.IsActive          = true;
-        // u.IsPortalEnabled   = true;
         u.TimeZoneSidKey    = 'America/New_York';
         U.LocaleSidKey      = 'en_US';
         u.LanguageLocaleKey = 'en_US';
@@ -40,6 +33,10 @@ public with sharing class ExternalUserService {
         System.resetPassword(user.Id, sendEmail);
     }
 
+    public static String getAliasFromName(String firstName, String lastName) {
+        return firstName.substring(0, 1) + lastName.substring(0, 4);
+    }
+
     private static Map<Id, User> getExternalUsersFromUserMap(Map<Id, User> mapUsers) {
         Map<Id, User> mapExternalUsers = new Map<Id, User>();
         for (User u : mapUsers.values()) {
@@ -48,6 +45,21 @@ public with sharing class ExternalUserService {
             }
         }
         return mapExternalUsers;
+    }
+
+    private static List<PermissionSetAssignment> getPSAsForUsers(
+        Map<Id, User> mapUsers, Set<String> setIdsToAssign
+    ) {
+        List<PermissionSetAssignment> lstPSAs = new List<PermissionSetAssignment>();
+        for (Id key : mapUsers.keySet()) {
+            for (String strId : setIdsToAssign) {
+                PermissionSetAssignment psa = new PermissionSetAssignment();
+                psa.AssigneeId = key;
+                psa.PermissionSetId = strId;
+                lstPSAs.add(psa);
+            }
+        }
+        return lstPSAs;
     }
 
     private static String getProfileId() {
