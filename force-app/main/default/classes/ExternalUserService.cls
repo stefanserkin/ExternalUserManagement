@@ -1,6 +1,8 @@
 public with sharing class ExternalUserService {
 
     private static External_User_Configuration__mdt userConfig = External_User_Configuration__mdt.getAll().values().get(0);
+    private static Boolean profileIdIsSet = false;
+    private static String profileId;
     private static Boolean permSetIdsAreSet = false;
     private static Set<String> setPermSetIds;
 
@@ -22,6 +24,22 @@ public with sharing class ExternalUserService {
         insert lstPSAs;
     }
 
+    public static User getUserWithDefaults() {
+        User u = new User();
+        u.ProfileId         = getProfileId();
+        u.IsActive          = true;
+        // u.IsPortalEnabled   = true;
+        u.TimeZoneSidKey    = 'America/New_York';
+        U.LocaleSidKey      = 'en_US';
+        u.LanguageLocaleKey = 'en_US';
+        u.EmailEncodingKey  = 'ISO-8859-1';
+        return u;
+    }
+
+    public static void resetPassword(User user, Boolean sendEmail) {
+        System.resetPassword(user.Id, sendEmail);
+    }
+
     private static Map<Id, User> getExternalUsersFromUserMap(Map<Id, User> mapUsers) {
         Map<Id, User> mapExternalUsers = new Map<Id, User>();
         for (User u : mapUsers.values()) {
@@ -30,6 +48,16 @@ public with sharing class ExternalUserService {
             }
         }
         return mapExternalUsers;
+    }
+
+    private static String getProfileId() {
+        if (profileIdIsSet) {
+            return profileId;
+        }
+        Profile profile = [SELECT Id FROM Profile WHERE Name = :userConfig.Profile_Name__c LIMIT 1];
+        profileId = profile.Id;
+        profileIdIsSet = true;
+        return profileId;
     }
 
     private static Set<String> getAutoAssignedPermissionSetIds() {
