@@ -11,7 +11,7 @@ public with sharing class ExternalUserActivation {
         }
 
         Profile profile = [SELECT Id FROM Profile WHERE Name LIKE :userConfig.Profile_Name__c LIMIT 1];
-        List<PermissionSet> permSetList = [SELECT Id, Name FROM PermissionSet WHERE Name IN :setPermissionSetIds];
+        // List<PermissionSet> permSetList = [SELECT Id, Name FROM PermissionSet WHERE Name IN :setPermissionSetIds];
 
         List<User> userList = new List<User>();
         for (ActivateUserRequest req : requestList) {
@@ -48,7 +48,7 @@ public with sharing class ExternalUserActivation {
                 }
             }
         }
-
+/*
         List<PermissionSetAssignment> psaList = new List<PermissionSetAssignment>();
         for (User u : userList) {
             for (PermissionSet permSet : permSetList) {
@@ -61,7 +61,7 @@ public with sharing class ExternalUserActivation {
         if (!psaList.isEmpty()) {
             insert psaList;
         }
-
+*/
         ActivateUserResult result = new ActivateUserResult();
         result.errors = errorList;
         result.newUserIds = newUserIds;

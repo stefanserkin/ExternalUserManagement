@@ -1,4 +1,4 @@
-public with sharing class ExternalUserService {
+public class ExternalUserService {
     
     private static Map<String, External_User_Configuration__mdt> mapUserConfigsBySite;
     private static Boolean userConfigMapIsSet = false;
@@ -18,14 +18,27 @@ public with sharing class ExternalUserService {
         }
     }
 
-    private static void createPSAsForUsers(Map<Id, User> mapExternalUsers) {
+    public static void createPSAsForUsers(Map<Id, User> mapExternalUsers) {
+        if (!permSetIdMapIsSet) {
+            setPermissionSetIdMap();
+        }
+        Set<Id> userIds = new Set<Id>();
+        for (User u : mapExternalUsers.values()) {
+            userIds.add(u.Id);
+        }
+        futureInsertPermissionSetAssignments(userIds);
+    }
+
+    @future
+    private static void futureInsertPermissionSetAssignments(Set<Id> userIds) {
         if (!permSetIdMapIsSet) {
             setPermissionSetIdMap();
         }
 
         List<PermissionSetAssignment> lstPSAs = new List<PermissionSetAssignment>();
+        List<User> lstUsers = [SELECT Id, ProfileId, Authorized_Sites__c FROM User WHERE Id IN :userIds];
 
-        for (User u : mapExternalUsers.values()) {
+        for (User u : lstUsers) {
             Set<String> authSites = new Set<String>();
             if (!String.isBlank(u.Authorized_Sites__c)) {
                 authSites.addAll(u.Authorized_Sites__c.split(','));
@@ -42,7 +55,7 @@ public with sharing class ExternalUserService {
                 psa.PermissionSetId = permSetId;
                 lstPSAs.add(psa);
             }
-        }
+        }        
 
         if (!lstPSAs.isEmpty()) {
             insert lstPSAs;
@@ -98,7 +111,7 @@ public with sharing class ExternalUserService {
     private static Map<Id, User> getExternalUsersFromUserMap(Map<Id, User> mapUsers) {
         Map<Id, User> mapExternalUsers = new Map<Id, User>();
         for (User u : mapUsers.values()) {
-            if (u.IsPortalEnabled && u.Alias != 't1') {
+            if (u.IsPortalEnabled) {
                 mapExternalUsers.put(u.Id, u);
             }
         }

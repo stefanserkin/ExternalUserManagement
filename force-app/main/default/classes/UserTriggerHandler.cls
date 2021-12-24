@@ -1,4 +1,4 @@
-public with sharing class UserTriggerHandler {
+public class UserTriggerHandler {
     
     public static void handleTriggerEvent(
         Map<Id, User> mapUsersInTrigger,
