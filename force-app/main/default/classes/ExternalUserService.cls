@@ -24,10 +24,13 @@ public with sharing class ExternalUserService {
         }
 
         List<PermissionSetAssignment> lstPSAs = new List<PermissionSetAssignment>();
+
         for (User u : mapExternalUsers.values()) {
             Set<String> authSites = new Set<String>();
             if (!String.isBlank(u.Authorized_Sites__c)) {
                 authSites.addAll(u.Authorized_Sites__c.split(','));
+            } else {
+                authSites.add(getDefaultUserConfig().Site_Name__c);
             }
             Set<String> permSetsToAssign = new Set<String>();
             for (String authSite : authSites) {
@@ -40,7 +43,10 @@ public with sharing class ExternalUserService {
                 lstPSAs.add(psa);
             }
         }
-        insert lstPSAs;
+
+        if (!lstPSAs.isEmpty()) {
+            insert lstPSAs;
+        }
     }
 
     private static void setPermissionSetIdMap() {
@@ -92,7 +98,7 @@ public with sharing class ExternalUserService {
     private static Map<Id, User> getExternalUsersFromUserMap(Map<Id, User> mapUsers) {
         Map<Id, User> mapExternalUsers = new Map<Id, User>();
         for (User u : mapUsers.values()) {
-            if (u.IsPortalEnabled && !String.isBlank(u.Authorized_Sites__c)) {
+            if (u.IsPortalEnabled && u.Alias != 't1') {
                 mapExternalUsers.put(u.Id, u);
             }
         }
