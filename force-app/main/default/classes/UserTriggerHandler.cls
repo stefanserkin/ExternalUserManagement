@@ -17,10 +17,12 @@ public class UserTriggerHandler extends TriggerHandler {
         assignDefaultPermissionSetsAsync(setCommunityUserIds);
     }
 
+
     /* *
     * Future method inserts default permission set assignments for a list of ids
     * Must be async to avoid conflict with self-registration
     * */
+
     @future
     private static void assignDefaultPermissionSetsAsync(Set<Id> setUserIds) {
         Set<Id> setPermSetIdsToAssign = CommunityUserHelper.getDefaultPermissionSetIds();

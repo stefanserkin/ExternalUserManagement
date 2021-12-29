@@ -12,12 +12,13 @@ trigger TESTEnableUserTrigger on User (after insert) {
                 PermissionSetAssignment psa = new PermissionSetAssignment();
                 psa.AssigneeId = u.Id;
                 psa.PermissionSetId = ps.Id;
-                System.debug('added psa to list');
                 lstPSAs.add(psa);
             }
         }
     }
-    System.debug('Inserted ' + lstPSAs.size() + ' records');
-    insert lstPSAs;
+
+    if (!lstPSAs.isEmpty()) {
+        insert lstPSAs;
+    }
 
 }
