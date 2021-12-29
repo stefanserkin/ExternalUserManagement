@@ -3,8 +3,8 @@ public with sharing class ExternalUserActivation {
     private static External_User_Configuration__mdt userConfig = External_User_Configuration__mdt.getAll().values().get(0);
 
     @InvocableMethod(label='Activate External User' description='Returns a username for created user' category='Custom User Actions')
-    public static List<ActivateUserResult> activateUser(List<ActivateUserRequest> requestList) {
-
+    public static void activateUser(List<ActivateUserRequest> requestList) {
+/*
         Set<String> setPermissionSetIds = new Set<String>();
         if (!String.isBlank(userConfig.Permission_Sets_to_Auto_Assign__c)) {
             setPermissionSetIds.addAll(userConfig.Permission_Sets_to_Auto_Assign__c.replaceAll('\\s+','').split(','));
@@ -48,6 +48,9 @@ public with sharing class ExternalUserActivation {
                 }
             }
         }
+        */
+
+
 /*
         List<PermissionSetAssignment> psaList = new List<PermissionSetAssignment>();
         for (User u : userList) {
@@ -62,12 +65,14 @@ public with sharing class ExternalUserActivation {
             insert psaList;
         }
 */
+/*
         ActivateUserResult result = new ActivateUserResult();
         result.errors = errorList;
         result.newUserIds = newUserIds;
         List<ActivateUserResult> resultList = new List<ActivateUserResult>();
         resultList.add(result);
         return resultList;
+        */
     }
     
     public class ActivateUserRequest {

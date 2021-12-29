@@ -1,5 +1,5 @@
 public class ExternalUserService {
-    
+    /*
     private static Map<String, External_User_Configuration__mdt> mapUserConfigsBySite;
     private static Boolean userConfigMapIsSet = false;
 
@@ -206,5 +206,5 @@ public class ExternalUserService {
         u.EmailEncodingKey  = 'ISO-8859-1';
         return u;
     }
-
+*/
 }
