@@ -27,6 +27,7 @@ public without sharing class CommunityUserHelper {
     * Returns only the users with the profile defined in the default External User Configuration
     * Profile name can be defined in Custom Metadata Type
     * */
+    
     public static Map<Id, User> getCommunityUsersFromMap(Map<Id, User> mapUsers) {
         Map<Id, User> mapCommunityUsers = new Map<Id, User>();
         String communityProfileId = getCommunityProfileId();
