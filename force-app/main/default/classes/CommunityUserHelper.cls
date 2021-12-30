@@ -81,7 +81,7 @@ public without sharing class CommunityUserHelper {
     * */
 
     public static String getAliasFromName(String firstName, String lastName) {
-        return firstName.substring(0, 1) + lastName.substring(0, 4);
+        return firstName.substring(0, 1) + (lastName.length() > 4 ? lastName.substring(0, 4) : lastName);
     }
 
 

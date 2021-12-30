@@ -17,12 +17,12 @@ public class CommunityUserFlowActivation {
             u.EmailEncodingKey    = 'ISO-8859-1';
 
             // Set unique values from arguments
-            u.ContactId           = req.contactId;
+            u.ContactId           = req.contact.Id;
             u.Username            = req.username;
             u.Email               = req.email;
-            u.FirstName           = req.firstName;
-            u.LastName            = req.lastName;
-            u.Alias               = CommunityUserHelper.getAliasFromName(req.firstName, req.lastName);
+            u.FirstName           = req.contact.FirstName;
+            u.LastName            = req.contact.LastName;
+            u.Alias               = CommunityUserHelper.getAliasFromName(req.contact.FirstName, req.contact.LastName);
             u.CommunityNickname   = CommunityUserHelper.getNicknameFromUsername(req.username);
             userList.add(u);
         }
@@ -51,16 +51,12 @@ public class CommunityUserFlowActivation {
     }
 
     public class UserActivationRequest {
-        @InvocableVariable(label='Contact ID' required=true)
-        public Id contactId;
+        @InvocableVariable(label='Contact' required=true)
+        public Contact contact;
         @InvocableVariable(label='Username' required=true)
         public String username;
         @InvocableVariable(label='Email' required=true)
         public String email;
-        @InvocableVariable(label='First Name' required=true)
-        public String firstName;
-        @InvocableVariable(label='Last Name' required=true)
-        public String lastName;
     }
 
     public class UserActivationResult {

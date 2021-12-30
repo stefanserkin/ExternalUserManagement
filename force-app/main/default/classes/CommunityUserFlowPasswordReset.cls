@@ -10,7 +10,7 @@ public class CommunityUserFlowPasswordReset {
     public class Request {
         @InvocableVariable(label='User' required=true)
         public User user;
-        @InvocableVariable(label='Send Email')
+        @InvocableVariable(label='Send Email' required=true)
         public Boolean sendEmail;
     }
 
