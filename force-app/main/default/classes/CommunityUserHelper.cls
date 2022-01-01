@@ -1,5 +1,7 @@
 public without sharing class CommunityUserHelper {
 
+    private static final String EMAIL_ENCODING_KEY = 'UTF-8';
+
     // Cache profile id from default user configuration
     private static String communityProfileId;
     private static Boolean communityProfileIdIsSet = false;
@@ -11,7 +13,6 @@ public without sharing class CommunityUserHelper {
     // Default user configuration
     private static External_User_Configuration__mdt userConfig = 
         External_User_Configuration__mdt.getInstance('Default_Community_User');
-
 
     /* *
     * Reset password for user
@@ -41,7 +42,7 @@ public without sharing class CommunityUserHelper {
 
 
     /* *
-    * Returns profile id defined in the default External User Configuration
+    * Caches and returns profile id defined in the default External User Configuration
     * Profile name can be defined in Custom Metadata Type
     * */
 
@@ -57,7 +58,7 @@ public without sharing class CommunityUserHelper {
 
 
     /* *
-    * Returns a collection of permission set ids defined in the default External User Configuration
+    * Caches and returns a collection of permission set ids defined in the default External User Configuration
     * Permission sets to auto-assign can be defined in Custom Metadata Type
     * */
 
@@ -91,6 +92,22 @@ public without sharing class CommunityUserHelper {
 
     public static String getNicknameFromUsername(String username) {
         return username.substring(0, username.indexOf('@'));
+    }
+
+    /* *
+    * Returns a user sobject with default required fields populated
+    * Defaults: IsActive, ProfileId, TimeZoneSidKey, LocaleSidKey, LanguageLocaleKey, EmailEncodingKey
+    * */
+
+    public static User getUserWithDefaults() {
+        return new User(
+            IsActive          = true, 
+            ProfileId         = getCommunityProfileId(), 
+            TimeZoneSidKey    = UserInfo.getTimeZone().toString(), 
+            LocaleSidKey      = UserInfo.getLocale(), 
+            LanguageLocaleKey = UserInfo.getLocale(), 
+            EmailEncodingKey  = EMAIL_ENCODING_KEY
+        );
     }
 
 

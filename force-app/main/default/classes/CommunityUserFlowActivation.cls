@@ -1,21 +1,12 @@
 public class CommunityUserFlowActivation {
 
-    @InvocableMethod(label='Activate External User' description='Returns a username for created user' category='Custom User Actions')
+    @InvocableMethod(label='Activate External User' description='Creates a community user based on External User Configuration custom metadata' category='Custom User Actions')
     public static List<UserActivationResult> activateUser(List<UserActivationRequest> lstRequests) {
-
-        Id profileId     = CommunityUserHelper.getCommunityProfileId();
 
         List<User> userList = new List<User>();
         for (UserActivationRequest req : lstRequests) {
-            User u = new User();
-            // Default assignments
-            u.ProfileId           = profileId;
-            u.IsActive            = true;
-            u.TimeZoneSidKey      = 'America/New_York';
-            U.LocaleSidKey        = 'en_US';
-            u.LanguageLocaleKey   = 'en_US';
-            u.EmailEncodingKey    = 'ISO-8859-1';
-
+            // Gets user with default required fields populated
+            User u = CommunityUserHelper.getUserWithDefaults();
             // Set unique values from arguments
             u.ContactId           = req.contact.Id;
             u.Username            = req.username;
@@ -65,4 +56,5 @@ public class CommunityUserFlowActivation {
         @InvocableVariable(label='Errors')
         public List<String> errors;
     }
+
 }
