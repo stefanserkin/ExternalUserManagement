@@ -1,8 +1,8 @@
-public class CommunityUserFlowPasswordReset {
+public class FlowExternalUserPasswordReset {
 
-    @InvocableMethod(label='Reset User Password' description='Reset password' category='Custom User Actions')
+    @InvocableMethod(label='Reset User Password' description='Reset password for a specified user' category='Users')
     public static void resetPassword(List<Request> requestList) {
-        CommunityUserHelper.resetPassword(requestList.get(0).user, requestList.get(0).sendEmail);
+        ExternalUserUtilities.resetPassword(requestList.get(0).user, requestList.get(0).sendEmail);
     }
     
     public class Request {

@@ -1,20 +1,20 @@
-public class CommunityUserFlowActivation {
+public class FlowExternalUserActivation {
 
-    @InvocableMethod(label='Activate External User' description='Creates a community user based on External User Configuration custom metadata' category='Custom User Actions')
+    @InvocableMethod(label='Activate External User' description='Creates a community user based on External Site Setting custom metadata' category='Users')
     public static List<UserActivationResult> activateUser(List<UserActivationRequest> lstRequests) {
 
         List<User> userList = new List<User>();
         for (UserActivationRequest req : lstRequests) {
             // Gets user with default required fields populated
-            User u = CommunityUserHelper.getUserWithDefaults();
+            User u = ExternalUserUtilities.getUserWithDefaults();
             // Set unique values from arguments
             u.ContactId           = req.contact.Id;
             u.Username            = req.username;
             u.Email               = req.email;
             u.FirstName           = req.contact.FirstName;
             u.LastName            = req.contact.LastName;
-            u.Alias               = CommunityUserHelper.getAliasFromName(req.contact.FirstName, req.contact.LastName);
-            u.CommunityNickname   = CommunityUserHelper.getNicknameFromUsername(req.username);
+            u.Alias               = ExternalUserUtilities.getAliasFromName(req.contact.FirstName, req.contact.LastName);
+            u.CommunityNickname   = ExternalUserUtilities.getNicknameFromUsername(req.username);
             userList.add(u);
         }
 
