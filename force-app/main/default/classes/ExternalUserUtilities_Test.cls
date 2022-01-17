@@ -1,6 +1,8 @@
 @isTest
 private class ExternalUserUtilities_Test {
 
+    private static final String INVALID_PERM_SET_NAME = 'View_Donations';
+
     @isTest
     static void testResetPassword() {
 
@@ -96,6 +98,26 @@ private class ExternalUserUtilities_Test {
         System.assertEquals(setPermSetIds.size(), setPermSetIdsFromCache.size(), 
             'Results from cache do not match original results');
     }
+
+    @isTest
+    static void testGetDefaultPermissionSetIdsWithInvalidId() {
+        // Set test mode and invalid permission set to add
+        ExternalUserUtilities.testPermissionSetsMode = true;
+        ExternalUserUtilities.testPermissionSetNameToAdd = INVALID_PERM_SET_NAME;
+
+        // Get permission set ids from utilities class
+        Test.startTest();
+        Set<Id> setPermSetIds = ExternalUserUtilities.getDefaultPermissionSetIds();
+        Test.stopTest();
+
+        PermissionSet invalidPermSet = [
+            SELECT Id, Name FROM PermissionSet WHERE Name = :INVALID_PERM_SET_NAME LIMIT 1
+        ];
+
+        // Verify invalid permission set was returned
+        System.assert(setPermSetIds.contains(invalidPermSet.Id), 'Did not find invalid perm set id in results');
+    }
+
     
     @isTest
     static void testGetAliasFromName() {
@@ -135,5 +157,8 @@ private class ExternalUserUtilities_Test {
         System.assert(u.IsActive, 'User is not active');
 
     }
+
+    
+
 
 }

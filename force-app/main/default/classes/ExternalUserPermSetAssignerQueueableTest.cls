@@ -1,6 +1,8 @@
 @isTest
 private class ExternalUserPermSetAssignerQueueableTest {
 
+    private static final String INVALID_PERM_SET_NAME = 'View_Donations';
+
     @isTest
     static void testAsyncPermissionSetAssignment() {
         // Create contact and user
@@ -29,6 +31,30 @@ private class ExternalUserPermSetAssignerQueueableTest {
             System.assert(setAssignedPermSetIds.contains(permSetId), 
                 'Did not find expected permission set id assignment');
         }
+    }
+
+    @isTest
+    static void testFailedPermSetAssignment() {
+
+        // Set ExternalUserUtilities class to test mode
+        ExternalUserUtilities.testPermissionSetsMode = true;
+        // Add permission set incompatible with community licenses
+        ExternalUserUtilities.testPermissionSetNameToAdd = INVALID_PERM_SET_NAME;
+
+        // Create contact and user
+        List<Contact> lstContacts = TestDataFactory.createContacts(1);
+        insert lstContacts;
+        List<User> lstExternalUsers = TestDataFactory.createExternalUsers(lstContacts);
+
+        // Insert user
+        Test.startTest();
+        List<Database.SaveResult> lstSRs = Database.insert(lstExternalUsers, false);
+        Test.stopTest();
+
+        for (Database.SaveResult sr : lstSRs) {
+            System.assert(sr.isSuccess(), 'User was not saved successfully');
+        }
+        
     }
 
 }

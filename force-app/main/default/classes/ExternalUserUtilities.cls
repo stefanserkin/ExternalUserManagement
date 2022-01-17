@@ -1,5 +1,10 @@
 public without sharing class ExternalUserUtilities {
 
+    // Test variables allow a default permission set to be added for testing
+    @TestVisible public static Boolean testPermissionSetsMode = false;
+    @TestVisible public static String testPermissionSetNameToAdd;
+
+    // Email encoding key for default user
     private static final String EMAIL_ENCODING_KEY = 'UTF-8';
 
     // Cache profile id from default user configuration
@@ -12,6 +17,7 @@ public without sharing class ExternalUserUtilities {
 
     // Default site configuration
     private static External_Site_Setting__mdt siteSetting = External_Site_Setting__mdt.getInstance('Default');
+
 
     /* *
     * Reset password for user
@@ -67,6 +73,10 @@ public without sharing class ExternalUserUtilities {
         }
         setPermissionSetIds = new Set<Id>();
         List<String> setPermSetNames = siteSetting.Permission_Sets_to_Auto_Assign__c.replaceAll('\\s+', '').split(',');
+        // Public static variables allow a default permission set to be added for testing
+        if (testPermissionSetsMode && !String.isBlank(testPermissionSetNameToAdd)) {
+            setPermSetNames.add(testPermissionSetNameToAdd);
+        }
         List<PermissionSet> lstPermSets = [SELECT Id FROM PermissionSet WHERE Name IN :setPermSetNames LIMIT 10000];
         for (PermissionSet permSet : lstPermSets) {
             setPermissionSetIds.add(permSet.Id);
