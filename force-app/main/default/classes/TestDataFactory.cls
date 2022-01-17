@@ -155,7 +155,6 @@ public class TestDataFactory {
     }
 
 
-
     /*************************
      * Rules (TREX1)
      *************************/
@@ -243,6 +242,5 @@ public class TestDataFactory {
         }
         return lstUsers;
     }
-
 
 }

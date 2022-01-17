@@ -136,7 +136,4 @@ private class ExternalUserUtilities_Test {
 
     }
 
-    
-
-
 }

@@ -1,6 +1,7 @@
 public with sharing class ExternalUserPermSetAssignerQueueable implements Queueable {
 
     public List<User> lstExternalUsers;
+    
     public ExternalUserPermSetAssignerQueueable(List<User> lstExternalUsersPassed) {
         this.lstExternalUsers = lstExternalUsersPassed;
     }

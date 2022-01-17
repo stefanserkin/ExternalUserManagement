@@ -93,6 +93,7 @@ public without sharing class ExternalUserUtilities {
         return username.contains('@') ? username.substring(0, username.indexOf('@')) : username;
     }
 
+
     /* *
     * Returns a user sobject with default required fields populated
     * Defaults: IsActive, ProfileId, TimeZoneSidKey, LocaleSidKey, LanguageLocaleKey, EmailEncodingKey
