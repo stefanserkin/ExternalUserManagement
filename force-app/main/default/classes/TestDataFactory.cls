@@ -1,13 +1,17 @@
 @isTest
 public class TestDataFactory {
+    
+    /***********************************
+     * Static Variables
+     ***********************************/    
 
     private static Id householdRecordTypeId = 
         Schema.SObjectType.Account.getRecordTypeInfosByDeveloperName().get('HH_Account').getRecordTypeId();
 
 
-    /*************************
+    /***********************************
      * Accounts
-     *************************/
+     ***********************************/
 
     private static final String ACCOUNT_BASE_NAME = 'Wright Household';
 
@@ -33,9 +37,9 @@ public class TestDataFactory {
     }
 
 
-    /*************************
+    /***********************************
      * Contacts
-     *************************/
+     ***********************************/
 
     private static final String CONTACT_BASE_FIRST_NAME = 'David';
     private static final String CONTACT_BASE_LAST_NAME = 'Wright';
@@ -98,9 +102,9 @@ public class TestDataFactory {
     }
 
 
-    /*************************
+    /***********************************
      * Membership Categories (TREX1)
-     *************************/
+     ***********************************/
 
     private static final String MEMBERSHIP_CATEGORY_BASE_NAME = 'Test Membership Category';
 
@@ -126,9 +130,9 @@ public class TestDataFactory {
     }
 
     
-    /*************************
+    /***********************************
      * Programs (TREX1)
-     *************************/
+     ***********************************/
 
     private static final String PROGRAM_BASE_NAME = 'Test Program';
 
@@ -155,9 +159,10 @@ public class TestDataFactory {
     }
 
 
-    /*************************
+
+    /***********************************
      * Rules (TREX1)
-     *************************/
+     ***********************************/
 
     private static final String RULE_BASE_NAME = 'Test Rule';
 
@@ -180,9 +185,9 @@ public class TestDataFactory {
     }
 
 
-    /*************************
+    /***********************************
      * Scheduled Rules
-     *************************/
+     ***********************************/
 
     private static final String SCHEDULED_RULE_BASE_NAME = 'Test Scheduled Rule';
     private static final String SCHEDULED_RULE_DESCRIPTION = 'A scheduled rule for testing';
@@ -215,9 +220,9 @@ public class TestDataFactory {
     }
 
 
-    /*************************
+    /***********************************
      * Users
-     *************************/
+     ***********************************/
 
     /**
      * Create external users for a list of contacts
@@ -242,5 +247,6 @@ public class TestDataFactory {
         }
         return lstUsers;
     }
+
 
 }
