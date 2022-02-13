@@ -1,0 +1,10 @@
+<apex:component id="ExternalUserNewUserActivation" access="Global" controller="ExternalUserNewUserActivationController">
+    <apex:attribute name="contactIdPassed" description="Contact id passed from email template" type="Id" assignTo="{!contactId}"/>
+    
+    <div style="{!IF(ProfileName='AG Customer Community Login User', 'display:block', 'display:none')}">
+		<p>Welcome to the Asphalt Green Community!</p>
+        <p><a href="{!$Network.NetworkUrlForUserEmails}">Click here to set up your account</a></p>
+		<p>Thank you,<br/>The AG Team</p>
+    </div>
+    
+</apex:component>
