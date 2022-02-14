@@ -1,10 +1,21 @@
 <apex:component id="ExternalUserNewUserActivation" access="Global" controller="ExternalUserNewUserActivationController">
-    <apex:attribute name="contactIdPassed" description="Contact id passed from email template" type="Id" assignTo="{!contactId}"/>
     
-    <div style="{!IF(ProfileName='AG Customer Community Login User', 'display:block', 'display:none')}">
-		<p>Welcome to the Asphalt Green Community!</p>
-        <p><a href="{!$Network.NetworkUrlForUserEmails}">Click here to set up your account</a></p>
+    <div id="email-header">
+        <img src="https://asphaltgreen--uat--c.documentforce.com/servlet/servlet.ImageServer?id=0153I000000DehA&oid=00D3I0000000VCy&lastMod=1639752840000" align="center"/>
+    </div>
+    
+    <div id="email-body">
+		<p>Welcome to the Asphalt Green Community! Click the button below to set up your account.</p>
+        <p>
+            <a href="{!$Network.NetworkUrlForUserEmails}">
+                <img src="https://asphaltgreen--uat--c.documentforce.com/servlet/servlet.ImageServer?id=0153I000000Dilk&oid=00D3I0000000VCy&lastMod=1644849906000" align="center" />
+            </a>
+        </p>
 		<p>Thank you,<br/>The AG Team</p>
+    </div>
+    
+    <div id="email-footer">
+        <img src="https://asphaltgreen--uat--c.documentforce.com/servlet/servlet.ImageServer?id=0153I000000Deh5&oid=00D3I0000000VCy&lastMod=1639752931000" />
     </div>
     
 </apex:component>
