@@ -7,7 +7,6 @@ public with sharing class ExternalUserPermSetAssignerQueueable implements Queuea
 
     public void execute(QueueableContext ctx) {
         String jobId = '' + ctx.getJobId();
-        System.debug('Begin: executing queueable job: ' + jobId);
         Set<Id> setPermSetIdsToAssign = ExternalUserUtilities.getDefaultPermissionSetIds();
         List<PermissionSetAssignment> lstPSAs = new List<PermissionSetAssignment>();
         for (User u : lstExternalUsers) {

@@ -139,7 +139,24 @@ private class ExternalUserUtilities_Test {
         String nickname = ExternalUserUtilities.getNicknameFromUsername(username);
         Test.stopTest();
 
+        String expectedNickname = username.contains('@') ? username.substring(0, username.indexOf('@')) : username;
+
         System.assert(nickname.length() > 0, 'Nickname was not set');
+        System.assertEquals(expectedNickname, nickname, 'Received unexpected nickname');
+    }
+
+    @isTest
+    static void testGetUniqueNicknameFromUsername() {
+        String username = 'bagbayani@metsies.com';
+
+        Test.startTest();
+        String nickname = ExternalUserUtilities.getNicknameFromUsername(username);
+        Test.stopTest();
+
+        String standardNickname = ExternalUserUtilities.getUniqueNicknameFromUsername(username);
+
+        System.assert(nickname.length() > 0, 'Nickname was not set');
+        System.assertNotEquals(standardNickname, nickname, 'Nickname is not unique');
     }
 
     @isTest

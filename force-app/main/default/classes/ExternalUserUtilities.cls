@@ -105,6 +105,18 @@ public without sharing class ExternalUserUtilities {
 
 
     /* *
+    * Returns a unique nickname
+    * Use this to retry user creation when receiving a duplicate nickname error
+    * */
+
+    public static String getUniqueNicknameFromUsername(String username) {
+        String nickname = username.contains('@') ? username.substring(0, username.indexOf('@')) : username;
+        nickname = nickname.left(10) + System.Now().getTime();
+        return nickname;
+    }
+
+
+    /* *
     * Returns a user sobject with default required fields populated
     * Defaults: IsActive, ProfileId, TimeZoneSidKey, LocaleSidKey, LanguageLocaleKey, EmailEncodingKey
     * */

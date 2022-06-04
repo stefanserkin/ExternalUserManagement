@@ -1,40 +1,40 @@
-public class FlowExternalUserActivation {
+public without sharing class FlowExternalUserActivation {
+
+    private static final String NICKNAME_FIELD = 'CommunityNickname';
+    private static List<Id> newUserIds;
+    private static List<User> lstUsers;
+    private static List<String> lstErrors;
+    private static List<String> lstErrorFields;
 
     @InvocableMethod(label='Activate External User' description='Creates a community user based on External Site Setting custom metadata' category='Users')
     public static List<UserActivationResult> activateUser(List<UserActivationRequest> lstRequests) {
 
-        List<User> userList = new List<User>();
+        lstUsers = new List<User>();
+        newUserIds = new List<Id>();
+        lstErrors = new List<String>();
+        lstErrorFields = new List<String>();
+        
         for (UserActivationRequest req : lstRequests) {
-            // Gets user with default required fields populated
-            User u = ExternalUserUtilities.getUserWithDefaults();
-            // Set unique values from arguments
-            u.ContactId           = req.contact.Id;
-            u.Username            = req.username;
-            u.Email               = req.email;
-            u.FirstName           = req.contact.FirstName;
-            u.LastName            = req.contact.LastName;
-            u.Alias               = ExternalUserUtilities.getAliasFromName(req.contact.FirstName, req.contact.LastName);
-            u.CommunityNickname   = ExternalUserUtilities.getNicknameFromUsername(req.username);
-            userList.add(u);
+            lstUsers.add(
+                getUserFromRequest(req)
+            );
         }
 
-        List<Id> newUserIds    = new List<Id>();
-        List<String> errorList = new List<String>();
+        // Insert users initial attempt
+        insertUsers( false );
 
-        List<Database.SaveResult> srList = Database.insert(userList, false);
-        for (Database.SaveResult sr : srList) {
-            if (sr.isSuccess()) {
-                newUserIds.add(sr.getId());
-            } else {
-                for (Database.error error : sr.getErrors()) {
-                    errorList.add(error.getMessage());
-                }
-            }
+        // Retry for any errors on duplicate nicknames
+        if (!lstErrors.isEmpty() && lstErrorFields.contains(NICKNAME_FIELD)) {
+            lstErrors.clear();
+            lstErrorFields.clear();
+            // Insert users retry = true
+            insertUsers( true );
         }
 
         UserActivationResult result = new UserActivationResult();
-        result.errors = errorList;
-        result.newUserIds = newUserIds;
+        result.lstErrors = lstErrors;
+        result.lstNewUserIds = newUserIds;
+        result.lstUsers = lstUsers;
         List<UserActivationResult> lstResults = new List<UserActivationResult>();
         lstResults.add(result);
         return lstResults;
@@ -52,9 +52,66 @@ public class FlowExternalUserActivation {
 
     public class UserActivationResult {
         @InvocableVariable(label='New Users')
-        public List<Id> newUserIds;
+        public List<Id> lstNewUserIds;
+        @InvocableVariable(label='User List')
+        public List<User> lstUsers;
         @InvocableVariable(label='Errors')
-        public List<String> errors;
+        public List<String> lstErrors;
+    }
+
+    private static User getUserFromRequest(UserActivationRequest req) {
+        // Gets user with default required fields populated
+        User u = ExternalUserUtilities.getUserWithDefaults();
+        // Set unique values from arguments
+        u.ContactId           = req.contact.Id;
+        u.Username            = req.username;
+        u.Email               = req.email;
+        u.FirstName           = req.contact.FirstName;
+        u.LastName            = req.contact.LastName;
+        u.Alias               = ExternalUserUtilities.getAliasFromName(req.contact.FirstName, req.contact.LastName);
+        u.CommunityNickname   = ExternalUserUtilities.getNicknameFromUsername(req.username);
+        return u;
+    }
+
+    private static void insertUsers(
+        Boolean isRetry
+    ) {
+        List<User> lstUsersToInsert = new List<User>();
+
+        if (isRetry) {
+            lstUsersToInsert.addAll(
+                getFailedUsersWithUniqueNicknames()
+            );
+        } else {
+            lstUsersToInsert = lstUsers;
+        }
+
+        if (!lstUsersToInsert.isEmpty()) {
+            List<Database.SaveResult> srList = Database.insert(lstUsersToInsert, false);
+            for (Database.SaveResult sr : srList) {
+                if (sr.isSuccess()) {
+                    newUserIds.add(sr.getId());
+                } else {
+                    for (Database.error error : sr.getErrors()) {
+                        lstErrors.add(error.getMessage());
+                        lstErrorFields.addAll(error.getFields());
+                    }
+                }
+            }
+        }
+    }
+
+    private static List<User> getFailedUsersWithUniqueNicknames() {
+        List<User> lstFailedUsers = new List<User>();
+        for (User u : lstUsers) {
+            if (u.Id == null) {
+                u.CommunityNickname = ExternalUserUtilities.getUniqueNicknameFromUsername(
+                    u.Username
+                );
+                lstFailedUsers.add(u);
+            }
+        }
+        return lstFailedUsers;
     }
 
 }
