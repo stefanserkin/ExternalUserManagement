@@ -2,33 +2,31 @@ public without sharing class FlowExternalUserActivation {
 
     private static final String NICKNAME_FIELD = 'CommunityNickname';
     private static List<Id> newUserIds;
-    private static List<User> lstUsers;
     private static List<String> lstErrors;
     private static List<String> lstErrorFields;
 
     @InvocableMethod(label='Activate External User' description='Creates a community user based on External Site Setting custom metadata' category='Users')
     public static List<UserActivationResult> activateUser(List<UserActivationRequest> lstRequests) {
 
-        lstUsers = new List<User>();
+        List<User> lstUsers = new List<User>();
+        
         newUserIds = new List<Id>();
         lstErrors = new List<String>();
         lstErrorFields = new List<String>();
         
         for (UserActivationRequest req : lstRequests) {
             lstUsers.add(
-                getUserFromRequest(req)
+                getUserFromRequest( req )
             );
         }
 
         // Insert users initial attempt
-        insertUsers( false );
+        insertUsers( lstUsers, false );
 
         // Retry for any errors on duplicate nicknames
         if (!lstErrors.isEmpty() && lstErrorFields.contains(NICKNAME_FIELD)) {
-            lstErrors.clear();
-            lstErrorFields.clear();
             // Insert users retry = true
-            insertUsers( true );
+            insertUsers( lstUsers, true );
         }
 
         UserActivationResult result = new UserActivationResult();
@@ -74,20 +72,27 @@ public without sharing class FlowExternalUserActivation {
     }
 
     private static void insertUsers(
+        List<User> lstUsers, 
         Boolean isRetry
     ) {
+        lstErrors.clear();
+        lstErrorFields.clear();
+
         List<User> lstUsersToInsert = new List<User>();
 
         if (isRetry) {
             lstUsersToInsert.addAll(
-                getFailedUsersWithUniqueNicknames()
+                getFailedUsersWithUniqueNicknames( lstUsers )
             );
         } else {
             lstUsersToInsert = lstUsers;
         }
 
         if (!lstUsersToInsert.isEmpty()) {
-            List<Database.SaveResult> srList = Database.insert(lstUsersToInsert, false);
+            List<Database.SaveResult> srList = Database.insert(
+                lstUsersToInsert, 
+                false
+            );
             for (Database.SaveResult sr : srList) {
                 if (sr.isSuccess()) {
                     newUserIds.add(sr.getId());
@@ -101,7 +106,9 @@ public without sharing class FlowExternalUserActivation {
         }
     }
 
-    private static List<User> getFailedUsersWithUniqueNicknames() {
+    private static List<User> getFailedUsersWithUniqueNicknames(
+        List<User> lstUsers
+    ) {
         List<User> lstFailedUsers = new List<User>();
         for (User u : lstUsers) {
             if (u.Id == null) {
